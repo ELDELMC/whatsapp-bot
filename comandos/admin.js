@@ -1,4 +1,4 @@
-// comandos/admin.js - Comandos de Administración (Versión Mejorada .add)
+// comandos/admin.js - Todos los comandos de administración (Versión Final Mejorada)
 module.exports = {
   command: 'admin',
   handler: async (sock, msg, args) => {
@@ -11,7 +11,7 @@ module.exports = {
     try {
       const groupMetadata = await sock.groupMetadata(from);
 
-      // Detección del bot como admin
+      // Detección robusta del bot como administrador
       const botNumber = '573218950565';
       const botLID = '244954936958986';
 
@@ -29,17 +29,18 @@ module.exports = {
 
       if (!isBotAdmin) {
         return await sock.sendMessage(from, { 
-          text: '❌ El bot no es administrador del grupo.\nDale permisos primero.' 
+          text: '❌ El bot no es administrador del grupo.\n\nPor favor, dale permisos de administrador primero.' 
         });
       }
 
+      // Verificar si quien ejecuta el comando es administrador
       const sender = msg.key.participant || msg.key.remoteJid;
       const isSenderAdmin = groupMetadata.participants.some(p => 
         p.id === sender && (p.admin === 'admin' || p.admin === 'superadmin')
       );
 
       if (!isSenderAdmin) {
-        return await sock.sendMessage(from, { text: '❌ Solo los administradores pueden usar estos comandos.' });
+        return await sock.sendMessage(from, { text: '❌ Solo los administradores del grupo pueden usar estos comandos.' });
       }
 
       // Extraer comando
@@ -52,21 +53,20 @@ module.exports = {
       // ==================== COMANDO .add (Mejorado) ====================
       if (command === 'add') {
         let target = null;
-
         const context = msg.message?.extendedTextMessage?.contextInfo;
 
-        // 1. Si responde a un mensaje (incluso antiguo)
+        // 1. Responder a mensaje (incluso antiguo)
         if (context?.quotedMessage) {
           target = context.participant || context.quotedMessage?.participant;
         }
-        // 2. Si etiqueta con @
+        // 2. Etiquetar con @
         else if (context?.mentionedJid?.length > 0) {
           target = context.mentionedJid[0];
         }
-        // 3. Si escribe el número directamente después del comando (.add 573052274793)
+        // 3. Escribir número directamente (.add 573052274793)
         else if (args.length > 0) {
-          let number = args[0].replace(/[^0-9]/g, ''); // Quitar todo lo que no sea número
-          if (number.length > 10) {
+          let number = args[0].replace(/[^0-9]/g, '');
+          if (number.length > 8) {
             target = number + '@s.whatsapp.net';
           }
         }
@@ -74,36 +74,26 @@ module.exports = {
         if (!target) {
           return await sock.sendMessage(from, { 
             text: '❌ Usa uno de estos métodos:\n' +
-                  '• Responde a un mensaje antiguo del usuario\n' +
+                  '• Responde a un mensaje antiguo\n' +
                   '• Etiqueta con @numero\n' +
-                  '• Escribe .add +573052274793' 
+                  '• Escribe .add 573052274793' 
           });
         }
 
-        // Agregar al grupo
-        try {
-          await sock.groupParticipantsUpdate(from, [target], "add");
+        await sock.groupParticipantsUpdate(from, [target], "add");
 
-          const adminTag = `@${sender.split('@')[0]}`;
-          const userTag = `@${target.split('@')[0]}`;
+        const adminTag = `@${sender.split('@')[0]}`;
+        const userTag = `@${target.split('@')[0]}`;
 
-          await sock.sendMessage(from, {
-            text: `${userTag} ha sido **resucitado** por ${adminTag} 👻`,
-            mentions: [target, sender]
-          });
-
-          console.log(`✅ Usuario agregado: ${target}`);
-        } catch (error) {
-          console.error('Error al agregar usuario:', error);
-          await sock.sendMessage(from, { text: '❌ No se pudo agregar al usuario. Verifica que el número sea correcto.' });
-        }
+        await sock.sendMessage(from, {
+          text: `${userTag} ha sido **resucitado** por ${adminTag} 👻`,
+          mentions: [target, sender]
+        });
 
         return;
       }
 
-      // ==================== OTROS COMANDOS ====================
-      // (Mantengo los demás comandos cortos para no hacer el archivo demasiado largo)
-
+      // ==================== COMANDOS RESTANTES ====================
       let target = null;
       const context = msg.message?.extendedTextMessage?.contextInfo;
 
@@ -116,7 +106,7 @@ module.exports = {
       if (command === 'ban' || command === 'kick') {
         if (!target) return await sock.sendMessage(from, { text: '❌ Responde o etiqueta al usuario.' });
         await sock.groupParticipantsUpdate(from, [target], "remove");
-        await sock.sendMessage(from, { text: `✅ Usuario expulsado.` });
+        await sock.sendMessage(from, { text: `✅ Usuario expulsado del grupo.` });
       }
 
       else if (command === 'admin' || command === 'promote') {
@@ -133,12 +123,12 @@ module.exports = {
 
       else if (command === 'mute') {
         await sock.groupSettingUpdate(from, "announcement");
-        await sock.sendMessage(from, { text: '🔇 Grupo silenciado.' });
+        await sock.sendMessage(from, { text: '🔇 Grupo silenciado. Solo admins pueden hablar.' });
       }
 
       else if (command === 'unmute') {
         await sock.groupSettingUpdate(from, "not_announcement");
-        await sock.sendMessage(from, { text: '🔊 Grupo abierto.' });
+        await sock.sendMessage(from, { text: '🔊 Grupo abierto. Todos pueden hablar.' });
       }
 
       else if (command === 'del' || command === 'delete') {

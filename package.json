@@ -10,9 +10,11 @@
   "author": "tu nombre",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@hapi/boom": "^10.0.1",
     "@whiskeysockets/baileys": "latest",
     "baileys": "github:WhiskeySockets/Baileys",
+    "groq-sdk": "^1.1.2",
     "qrcode-terminal": "^0.12.0"
   }
 }
