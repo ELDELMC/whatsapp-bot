@@ -1,0 +1,19 @@
+# Dependencias
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Sesión de Baileys
+auth_info_baileys/
+
+# Archivos de entorno
+.env
+.env.local
+
+# Logs
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
